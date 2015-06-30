@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+'use strict';
+
+var es = require('event-stream');
+var combine = require('stream-combiner');
+var moment = require('moment');
+var countStream = require('./lib/count-stream');
+var read = require('./lib/read');
+
+var hits = es.through(function(row) {
+  var time = moment.unix(row.time);
+  var day = time.format(process.argv[2] || 'YYYY-MM-DD');
+
+  this.push(day);
+});
+
+read(combine(hits, countStream()));

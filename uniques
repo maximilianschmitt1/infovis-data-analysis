@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+'use strict';
+
+var es = require('event-stream');
+var combine = require('stream-combiner');
+var moment = require('moment');
+var countStream = require('./lib/count-stream');
+var read = require('./lib/read');
+
+var uniques = function() {
+  var ids = {};
+
+  var read = function(row) {
+    var time = moment.unix(row.time).format(process.argv[2] || 'YYYY-MM-DD');
+    var day = moment.unix(row.time).format('YYYY-MM-DD');
+    var unique = day + '-' + row.anonymizedName;
+
+    if (ids[unique]) {
+      return;
+    }
+
+    ids[unique] = true;
+    this.push(time);
+  };
+
+  return es.through(read);
+};
+
+read(combine(uniques(), countStream()));

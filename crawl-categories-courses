@@ -1,0 +1,97 @@
+#!/usr/bin/env node
+'use strict';
+
+const axios = require('axios');
+const cheerio = require('cheerio');
+const url = require('url');
+const async = require('async');
+const normalizeUrl = require('normalize-url');
+
+const done = {};
+const queue = async.queue(get, 10);
+const start = { url: 'https://elearning.uni-regensburg.de/' };
+
+queue.push(start);
+queue.drain = function() {
+  process.stdout.write(JSON.stringify(start, null, 2));
+};
+
+function get(parent, cb) {
+  if (parent.id && done[parent.id]) {
+    return cb();
+  }
+
+  done[parent.id] = true;
+
+  axios
+    .get(parent.url)
+    .then(extractLinks)
+    .then(next)
+    .catch(cb);
+
+  function next(links) {
+    parent.courses = links.courses;
+    parent.categories = links.categories;
+
+    links.categories.forEach(function(cat) {
+      if (done[cat.id]) {
+        return;
+      }
+
+      queue.push(cat);
+    });
+
+    cb();
+  }
+
+  function extractLinks(res) {
+    const $ = cheerio.load(res.data);
+
+    return {
+      courses: courseLinks(),
+      categories: categoryLinks()
+    };
+
+    function categoryLinks() {
+      return $('a')
+        .filter(function() {
+          const $el = $(this);
+          const link = url.parse($el.attr('href'), true);
+          return !!link.query.categoryid && !done[link.query.categoryid];
+        })
+        .get()
+        .map(function(el) {
+          const $el = $(el);
+          const href = $el.attr('href');
+          const link = url.parse(href, true);
+
+          return {
+            name: $el.text(),
+            id: Number(link.query.categoryid),
+            url: normalizeUrl(href)
+          };
+        });
+    }
+
+    function courseLinks() {
+      return $('.course a')
+        .filter(function() {
+          const $el = $(this);
+          const link = url.parse(url.resolve(parent.url, $el.attr('href')), true);
+          return !!link.query.id && link.pathname.indexOf('/course/') !== -1;
+        })
+        .get()
+        .map(function(el) {
+          const $el = $(el);
+          const href = url.resolve(parent.url, $el.attr('href'));
+          const link = url.parse(href, true);
+
+          return {
+            name: $el.text(),
+            id: Number(link.query.id),
+            url: normalizeUrl(href)
+          };
+        });
+    }
+  }
+}

@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+'use strict';
+
+const concat = require('concat-stream');
+
+process.stdin.pipe(concat(function(buffer) {
+  let calls = 0;
+  const tree = JSON.parse(buffer);
+  const faculties = tree.categories.map(function(category) {
+    return {
+      id: category.id,
+      name: category.name,
+      url: category.url,
+      courses: []
+    };
+  });
+
+  faculties.forEach(function(faculty, i) {
+    calls++;
+    walk(faculty, tree.categories[i]);
+  });
+
+  function done() {
+    if (process.argv[2] === 'count') {
+      faculties.forEach(function(faculty) {
+        faculty.courses = faculty.courses.length;
+      });
+    }
+
+    process.stdout.write(JSON.stringify(faculties, null, 2));
+  }
+
+  function walk(faculty, category) {
+    calls--;
+
+    if (category.courses) {
+      category.courses.forEach(function(course) {
+        faculty.courses.push(course);
+      });
+    }
+
+    if (category.categories) {
+      category.categories.forEach(function(category) {
+        calls++;
+        setImmediate(walk.bind(null, faculty, category));
+      });
+    }
+
+    if (calls === 0) {
+      done();
+    }
+  }
+}));

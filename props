@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+'use strict';
+
+var es = require('event-stream');
+var combine = require('stream-combiner');
+var read = require('./lib/read');
+var countStream = require('./lib/count-stream');
+var args = process.argv.slice(2);
+
+var analyzer = function(args) {
+  var read = function(row) {
+    this.push(args.map(function(prop) { return row[prop]; }));
+  };
+
+  var end = function() {
+    this.push(null);
+  };
+
+  return combine(es.through(read, end), countStream());
+};
+
+if (args.length < 1) {
+  console.error('You must specify at least one property to count, e.g. `action`');
+} else {
+  read(analyzer(args));
+}

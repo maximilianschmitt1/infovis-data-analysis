@@ -1,0 +1,35 @@
+#!/usr/bin/env node
+'use strict';
+
+var es = require('event-stream');
+var combine = require('stream-combiner');
+var moment = require('moment');
+var countStream = require('./lib/count-stream');
+var read = require('./lib/read');
+var argv = require('minimist')(process.argv.slice(2));
+
+var total = argv._.indexOf('total');
+
+if (total !== -1) {
+  argv._.splice(total, 1);
+  total = true;
+} else {
+  total = false;
+}
+
+var actions = function() {
+  var read = function(row) {
+    var time = moment.unix(row.time).format(argv._[0] || 'YYYY-MM-DD');
+
+    if (total) {
+      this.push([time, row.action]);
+      return;
+    }
+
+    this.push([time, row.context, row.action]);
+  };
+
+  return es.through(read);
+};
+
+read(combine(actions(), countStream()));
