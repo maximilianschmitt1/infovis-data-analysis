@@ -1,4 +1,4 @@
-# Verwendung
+# infovis data analysis
 
 ## Installation
 
