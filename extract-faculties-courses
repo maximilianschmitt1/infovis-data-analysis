@@ -2,6 +2,7 @@
 'use strict';
 
 const concat = require('concat-stream');
+const uniq = require('uniq');
 
 process.stdin.pipe(concat(function(buffer) {
   let calls = 0;
@@ -21,6 +22,12 @@ process.stdin.pipe(concat(function(buffer) {
   });
 
   function done() {
+    faculties.forEach(function(faculty) {
+      faculty.courses = uniq(faculty.courses, function(c1, c2) {
+        return c1.id - c2.id;
+      });
+    });
+
     if (process.argv[2] === 'count') {
       faculties.forEach(function(faculty) {
         faculty.courses = faculty.courses.length;

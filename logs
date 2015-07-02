@@ -4,6 +4,7 @@
 const exec = require('child_process').exec;
 const path = require('path');
 const mkdirp = require('mkdirp');
+const es = require('event-stream');
 const fs = require('fs');
 const argv = process.argv;
 const outDir = path.join(process.cwd(), argv[2]);
@@ -24,16 +25,40 @@ const scripts = [
   ['./uniques YYYY-MM-DD', 'uniques-per-day.json'],
   ['./uniques YYYY-MM-DD-HH', 'uniques-per-hour.json'],
   ['./uniques YYYY-MM-DD-HH-mm', 'uniques-per-minute.json']
-];
+].filter(function(s) {
+  return argv[3] ? s[1].indexOf(argv[3]) !== -1 : true;
+});
 
-process.stdin.setMaxListeners(15);
-
-scripts.forEach(function(s) {
+const streams = scripts.map(function(s) {
   const cmd = s[0];
   const outFile = s[1];
 
-  const script = exec(cmd);
-
-  process.stdin.pipe(script.stdin);
+  const script = exec(cmd, { maxBuffer: 1000 * 1000 * 1024 }); // maxBuffer = 1000MB
+  script.on('error', onError);
   script.stdout.pipe(fs.createWriteStream(path.join(outDir, outFile)));
+
+  return script.stdin;
 });
+
+process.stdin.pipe(tee(streams));
+
+function onError(err) {
+  console.log('error');
+  console.log(err);
+}
+
+function tee(streams) {
+  return es.through(function(chunk) {
+    streams.forEach(function(stream) {
+      stream.write(chunk);
+    });
+
+    this.push(chunk);
+  }, function() {
+    streams.forEach(function(stream) {
+      stream.end();
+    });
+
+    this.emit('end');
+  });
+}
