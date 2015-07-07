@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+'use strict';
+
+const read = require('./lib/read');
+const write = require('./lib/write');
+const through = require('through2');
+const instructors = require('./eval/instructors.json');
+
+read(filterStudents(), false).pipe(write());
+
+function filterStudents() {
+  return through.obj(function(row, enc, cb) {
+    if (instructors.indexOf(row.anonymizedName) !== -1) {
+      return cb();
+    }
+
+    cb(null, row);
+  });
+}

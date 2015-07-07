@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+'use strict';
+
+const read = require('./lib/read');
+const through = require('through2');
+const unique = require('unique-stream');
+const combine = require('stream-combiner');
+const instructorActions = require('./resources/instructor-actions.json');
+
+read(combine(extractInstructors(), unique()));
+
+function extractInstructors() {
+  return through.obj(function(row, enc, cb) {
+    const name = row.anonymizedName;
+    const action = getAction(row);
+
+    if (instructorActions.indexOf(action) === -1) {
+      return cb();
+    }
+
+    cb(null, name);
+  });
+}
+
+function getAction(row) {
+  return row.context + ':' + (row.action.replace(' ', '_'));
+}

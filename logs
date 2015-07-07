@@ -13,18 +13,24 @@ mkdirp.sync(outDir);
 
 const scripts = [
   ['./props context action', 'action-context-types.json'],
-  ['./hits YYYY-MM-DD', 'hits-per-day.json'],
-  ['./hits YYYY-MM-DD-HH', 'hits-per-hour.json'],
+  //['./hits YYYY-MM-DD', 'hits-per-day.json'],
+  //['./hits YYYY-MM-DD-HH', 'hits-per-hour.json'],
   ['./hits YYYY-MM-DD-HH-mm', 'hits-per-minute.json'],
-  ['./actions YYYY-MM-DD', 'actions-per-day.json'],
-  ['./actions YYYY-MM-DD-HH', 'actions-per-hour.json'],
+  //['./actions YYYY-MM-DD', 'actions-per-day.json'],
+  //['./actions YYYY-MM-DD-HH', 'actions-per-hour.json'],
   ['./actions YYYY-MM-DD-HH-mm', 'actions-per-minute.json'],
-  ['./actions total YYYY-MM-DD', 'total-actions-per-day.json'],
-  ['./actions total YYYY-MM-DD-HH', 'total-actions-per-hour.json'],
-  ['./actions total YYYY-MM-DD-HH-mm', 'total-actions-per-minute.json'],
-  ['./uniques YYYY-MM-DD', 'uniques-per-day.json'],
-  ['./uniques YYYY-MM-DD-HH', 'uniques-per-hour.json'],
-  ['./uniques YYYY-MM-DD-HH-mm', 'uniques-per-minute.json']
+  //['./actions total YYYY-MM-DD', 'total-actions-per-day.json'],
+  //['./actions total YYYY-MM-DD-HH', 'total-actions-per-hour.json'],
+  //['./actions total YYYY-MM-DD-HH-mm', 'total-actions-per-minute.json'],
+  //['./uniques YYYY-MM-DD', 'uniques-per-day.json'],
+  //['./uniques YYYY-MM-DD-HH', 'uniques-per-hour.json'],
+  ['./uniques YYYY-MM-DD-HH-mm', 'uniques-per-minute.json'],
+  ['./filter-instructors | ./uniques YYYY-MM-DD-HH-mm', 'instructor-uniques-per-minute.json'],
+  ['./filter-instructors | ./actions YYYY-MM-DD-HH-mm', 'instructor-actions-per-minute.json'],
+  ['./filter-instructors | ./hits YYYY-MM-DD-HH-mm', 'instructor-hits-per-minute.json'],
+  ['./filter-students | ./uniques YYYY-MM-DD-HH-mm', 'student-uniques-per-minute.json'],
+  ['./filter-students | ./actions YYYY-MM-DD-HH-mm', 'student-actions-per-minute.json'],
+  ['./filter-students | ./hits YYYY-MM-DD-HH-mm', 'student-hits-per-minute.json']
 ].filter(function(s) {
   return argv[3] ? s[1].indexOf(argv[3]) !== -1 : true;
 });
