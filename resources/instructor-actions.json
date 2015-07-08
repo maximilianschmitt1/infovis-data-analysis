@@ -62,7 +62,6 @@
   "course:user_report",
   "choicegroup:view",
   "choice:view",
-  "role.assign",
   "course:update_mod",
   "data:view",
   "course:editsection",

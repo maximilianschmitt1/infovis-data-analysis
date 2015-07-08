@@ -14,6 +14,7 @@ function filterStudents() {
       return cb();
     }
 
-    cb(null, row);
+    this.push(row);
+    cb();
   });
 }
